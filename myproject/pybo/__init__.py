@@ -30,9 +30,10 @@ def create_app():
     # def hello_pybo():
     #     return 'Hello, Pybo!'
 
-    # 블루프린트 적용 (main_veiws, question_views)
-    from .views import main_views, question_views
+    # 블루프린트 적용 (main_veiws, question_views, answer_views)
+    from .views import main_views, question_views, answer_views
     app.register_blueprint(main_views.bp)
     app.register_blueprint(question_views.bp)
+    app.register_blueprint(answer_views.bp)
 
     return app
