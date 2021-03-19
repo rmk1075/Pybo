@@ -1,3 +1,5 @@
+import functools
+
 from flask import Blueprint, url_for, render_template, flash, request, session, g
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
@@ -72,3 +74,13 @@ def logout():
     session.clear()
     return redirect(url_for('main.index'))
 
+
+# login 상태 확인을 위한 decorator 선언
+# wrapped function에서 g.user가 존재하지 않는 경우 로그인 화면으로 이동하도록 한다.
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for('auth.login'))
+        return view(**kwargs)
+    return wrapped_view

@@ -1,18 +1,21 @@
 from datetime import datetime
 
-from flask import Blueprint, url_for, request, render_template
+from flask import Blueprint, url_for, request, render_template, g
 from werkzeug.utils import redirect
 
 from pybo import db
 from pybo.forms import AnswerForm
 from pybo.models import Question, Answer
+from pybo.views.auth_views import login_required
 
 bp = Blueprint('answer', __name__, url_prefix='/answer')
 
 
 # answer 조회
 # POST 방식으로 접근
+# login 상태 확인을 위한 decorator 사용
 @bp.route('/create/<int:question_id>', methods=('POST',))
+@login_required
 def create(question_id):
     # question 객체 조회
     question = Question.query.get_or_404(question_id)
@@ -25,7 +28,8 @@ def create(question_id):
         content = request.form['content']
 
         # 질문에 달릴 답변 객체 생성
-        answer = Answer(content=content, create_date=datetime.now())
+        # user 필드 반영 - g.user
+        answer = Answer(content=content, create_date=datetime.now(), user=g.user)
         question.answer_set.append(answer)
         db.session.commit()
 
