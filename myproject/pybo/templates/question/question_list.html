@@ -4,9 +4,10 @@
 <div class="container my-3">
     <table class="table">
         <thead>
-        <tr class="thead-dark">
+        <tr class="text-center thead-dark">
             <th>번호</th>
-            <th>제목</th>
+            <th style="width:50%">제목</th>
+            <th>글쓴이</th>
             <th>작성일시</th>
         </tr>
         </thead>
@@ -14,17 +15,19 @@
         {% if question_list %}
         <!--    페이징 기능 적용    -->
         {% for question in question_list.items %}
-        <tr>
+        <tr class="text-center">
             <!--  <td>{{ loop.index }}</td>  -->
             <!--  페이지 리스트 번호  -->
             <td>{{ question_list.total - ((question_list.page-1) * question_list.per_page) - loop.index0 }}</td>
-            <td>
+            <td class="text-left">
                 <a href="{{ url_for('question.detail', question_id=question.id) }}">{{ question.subject }}</a>
                 <!--  답변 개수  -->
                 {% if question.answer_set|length > 0 %}
                 <span class="text-danger small ml-2">{{ question.answer_set|length }}</span>
                 {% endif %}
             </td>
+            <!--      글쓴이 출력      -->
+            <td>{{ question.user.username }}</td>
             <!--     datetime filter 사용       -->
             <td>{{ question.create_date|datetime }}</td>
         </tr>
