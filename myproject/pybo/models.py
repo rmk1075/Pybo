@@ -17,6 +17,9 @@ class Question(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     user = db.relationship('User', backref=db.backref('question_set'))
 
+    # 수정일자 컬럼
+    modify_date = db.Column(db.DateTime(), nullable=True)
+
 
 # 답변 객체 클래스
 # 답변 객체 클래스: 고유 번호(id), 질문 번호 (question_id), 질문 (question), 내용(content), 작성일시(create_date)
@@ -37,6 +40,9 @@ class Answer(db.Model):
     # user 객체의 id와 연결
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     user = db.relationship('User', backref=db.backref('answer_set'))
+
+    # 수정일자 컬럼
+    modify_date = db.Column(db.DateTime(), nullable=True)
 
 
 # 회원 정보 모델

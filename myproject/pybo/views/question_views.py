@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, url_for, g
+from flask import Blueprint, render_template, request, url_for, g, flash
 from werkzeug.utils import redirect
 
 from .auth_views import login_required
@@ -60,3 +60,47 @@ def create():
         db.session.commit()
         return redirect(url_for('main.index'))
     return render_template('question/question_form.html', form=form)
+
+
+# Question 수정 함수
+# login_required decorator 사용
+@bp.route('/modify/<int:question_id>', methods=('GET', 'POST'))
+@login_required
+def modify(question_id):
+    question = Question.query.get_or_404(question_id)
+
+    # 사용자가 글쓴이가 아닌 경우 flash 출력
+    if g.user != question.user:
+        flash('수정권한이 없습니다')
+        return redirect(url_for('question.detail', question_id=question_id))
+
+    # POST 방식인 경우 새롭게 입력된 값들로 Question을 수정해준다.
+    if request.method == 'POST':
+        form = QuestionForm()
+        if form.validate_on_submit():
+            # form에 입력되어있는 데이터를 question 객체에 적용해 준다.
+            form.populate_obj(question)
+
+            question.modify_date = datetime.now()  # 수정일시 저장
+            db.session.commit()
+            return redirect(url_for('question.detail', question_id=question_id))
+    else:
+        # QuestionForm(obj=question): 조회한 데이터를 obj 인자로 전달하여 폼을 생성한다.
+        form = QuestionForm(obj=question)
+    return render_template('question/question_form.html', form=form)
+
+
+# Question 삭제 함수
+# login_required decorator 사용
+@bp.route('/delete/<int:question_id>')
+@login_required
+def delete(question_id):
+    question = Question.query.get_or_404(question_id)
+
+    # 사용자, 글쓴이 일치 확인
+    if g.user != question.user:
+        flash('삭제권한이 없습니다')
+        return redirect(url_for('question.detail', question_id=question_id))
+    db.session.delete(question)
+    db.session.commit()
+    return redirect(url_for('question._list'))
