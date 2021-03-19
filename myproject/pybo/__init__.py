@@ -18,6 +18,7 @@ naming_convention = {
 db = SQLAlchemy(metadata=MetaData(naming_convention=naming_convention))
 migrate = Migrate()
 
+
 # application factory: app 객체를 생성하는 함수
 # - create_app()은 플라스크 내부에서 정의된 함수명으로 다른 함수명을 사용하는 경우 오류 발생한다.
 def create_app():
@@ -44,11 +45,12 @@ def create_app():
     #     return 'Hello, Pybo!'
 
     # 블루프린트 적용 (main_veiws, question_views, answer_views, auth_views)
-    from .views import main_views, question_views, answer_views, auth_views
+    from .views import main_views, question_views, answer_views, auth_views, comment_views
     app.register_blueprint(main_views.bp)
     app.register_blueprint(question_views.bp)
     app.register_blueprint(answer_views.bp)
     app.register_blueprint(auth_views.bp)
+    app.register_blueprint(comment_views.bp)
 
     # 필터 적용
     from .filter import format_datetime
