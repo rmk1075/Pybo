@@ -33,7 +33,10 @@ def create(question_id):
         question.answer_set.append(answer)
         db.session.commit()
 
-        return redirect(url_for('question.detail', question_id=question_id))
+        # return redirect(url_for('question.detail', question_id=question_id))
+
+        # 답변 생성 후 앵커로 이동하기 위한 redirect 수정
+        return redirect('{}#answer_{}'.format(url_for('question.detail', question_id=question_id), answer.id))
 
     return render_template('question/question_detail.html', question=question, form=form)
 
@@ -58,7 +61,10 @@ def modify(answer_id):
             form.populate_obj(answer)
             answer.modify_date = datetime.now()  # 수정일시 저장
             db.session.commit()
-            return redirect(url_for('question.detail', question_id=answer.question.id))
+            # return redirect(url_for('question.detail', question_id=answer.question.id))
+
+            # 답변 수정 후 앵커로 이동하기 위한 redirect 수정
+            return redirect('{}#answer_{}'.format(url_for('question.detail', question_id=answer.question.id), answer.id))
     else:
         # AnswerForm(obj=answer): 조회한 데이터를 obj 인자로 전달하여 폼을 생성한다.
         form = AnswerForm(obj=answer)
