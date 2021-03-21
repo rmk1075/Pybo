@@ -1,6 +1,24 @@
 from pybo import db
 
 
+# 질문 추천 객체 생성
+# user_id와 question_id의 다대다 관계
+question_voter = db.Table(
+    'question_voter',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('question_id', db.Integer, db.ForeignKey('question.id', ondelete='CASCADE'), primary_key=True)
+)
+
+
+# 답변 추천 객체 생성
+# user_id와 question_id의 다대다 관계
+answer_voter = db.Table(
+    'answer_voter',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('answer_id', db.Integer, db.ForeignKey('answer.id', ondelete='CASCADE'), primary_key=True)
+)
+
+
 # 질문 객체 클래스
 # db.Model: 모든 모델의 기본 클래스
 # 질문 객체 컬럼: 고유 번호(id), 제목(subject), 내용(content), 작성일시(create_date)
@@ -19,6 +37,10 @@ class Question(db.Model):
 
     # 수정일자 컬럼
     modify_date = db.Column(db.DateTime(), nullable=True)
+
+    # 추천인
+    # secondary: voter가 다대다 관계이며, question_voter 테이블을 참조한다.
+    voter = db.relationship('User', secondary=question_voter, backref=db.backref('question_voter_set'))
 
 
 # 답변 객체 클래스
@@ -43,6 +65,9 @@ class Answer(db.Model):
 
     # 수정일자 컬럼
     modify_date = db.Column(db.DateTime(), nullable=True)
+
+    # 추천인
+    voter = db.relationship('User', secondary=answer_voter, backref=db.backref('answer_voter_set'))
 
 
 # 회원 정보 모델
