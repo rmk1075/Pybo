@@ -1,13 +1,14 @@
 from datetime import datetime
 
 from flask import Blueprint, render_template, request, url_for, g, flash
+from sqlalchemy import func
 from werkzeug.utils import redirect
 
 from .auth_views import login_required
 from .. import db
 
 from pybo.forms import QuestionForm, AnswerForm
-from pybo.models import Question
+from pybo.models import Question, Answer, User, question_voter
 
 # 블루프린트 객체 이름 question으로 생성
 # url_prefix를 '/question'으로 설정
@@ -21,16 +22,58 @@ def _list():
     # GET 방식으로 페이지 값을 가져올때 사용한다.
     # 페이지 값의 type은 int이다.
     # default는 1, 첫번째 페이지이다.
+    # page, kw(keyword) 검색을 위해서 사용
+    # so는 게시물 정렬에 사용, default는 최신순
     page = request.args.get('page', type=int, default=1)
+    kw = request.args.get('kw', type=str, default='')
+    so = request.args.get('so', type=str, default='recent')
 
-    question_list = Question.query.order_by(Question.create_date.desc())
+    # 게시물 정렬
+    if so == 'recommend':
+        # 추천순
+        # 질문별 추천수 조회하는 서브쿼리
+        # func.count('*'): 질문별 추천수
+        sub_query = db.session.query(question_voter.c.question_id, func.count('*').label('num_voter')) \
+            .group_by(question_voter.c.question_id).subquery()
+
+        # Question 객체와 sub_query를 아우터조인
+        question_list = Question.query \
+            .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
+            .order_by(sub_query.c.num_voter.desc(), Question.create_date.desc())
+    elif so == 'popular':
+        # 답변
+        sub_query = db.session.query(Answer.question_id, func.count('*').label('num_answer')) \
+            .group_by(Answer.question_id).subquery()
+
+        question_list = Question.query \
+            .outerjoin(sub_query, Question.id == sub_query.c.question_id) \
+            .order_by(sub_query.c.num_answer.desc(), Question.create_date.desc())
+    else:
+        # recent
+        question_list = Question.query.order_by(Question.create_date.desc())
+
+    # kw 검색 사용시
+    if kw:
+        search = '%%{}%%'.format(kw)
+        sub_query = db.session.query(Answer.question_id, Answer.content, User.username) \
+            .join(User, Answer.user_id == User.id).subquery()
+        question_list = question_list \
+            .join(User) \
+            .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+            .filter(Question.subject.ilike(search) |  # 질문제목
+                    Question.content.ilike(search) |  # 질문내용
+                    User.username.ilike(search) |  # 질문작성자
+                    sub_query.c.content.ilike(search) |  # 답변내용
+                    sub_query.c.username.ilike(search)  # 답변작성자
+                    ) \
+            .distinct()
 
     # paginate 함수로 페이징을 적용한다.
     # 첫번쨰 인자 page는 가져올 페이지의 번호이다,
     # per_page는 페이지마다 보여줄 데이터의 건수이다.
+    # 페이징
     question_list = question_list.paginate(page, per_page=10)
-
-    return render_template('question/question_list.html', question_list=question_list)
+    return render_template('question/question_list.html', question_list=question_list, page=page, kw=kw, so=so)
 
 
 # question detail 조회 함수
