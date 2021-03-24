@@ -77,11 +77,20 @@ def _list():
 
 
 # question detail 조회 함수
+# answer paging 기능 추가
 @bp.route('/detail/<int:question_id>/')
 def detail(question_id):
     form = AnswerForm()
     question = Question.query.get_or_404(question_id)
-    return render_template('question/question_detail.html', question=question, form=form)
+
+    # answer paging
+    page = request.args.get('page', type=int, default=1)
+    answer_list = []
+    if question.answer_set:
+        answer_list = Answer.query.filter(Answer.question_id == question_id).order_by(Answer.create_date.desc())
+        answer_list = answer_list.paginate(page, per_page=5)
+
+    return render_template('question/question_detail.html', question=question, answer_list=answer_list, form=form)
 
 
 # Quesiont 등록 함수

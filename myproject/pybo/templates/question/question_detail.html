@@ -73,7 +73,8 @@
     </div>
     <!-- 답변 내용 -->
     <h5 class="border-bottom my-3 py-2">{{ question.answer_set|length }}개의 답변이 있습니다.</h5>
-    {% for answer in question.answer_set %}
+    <!-- 답변 페이징 처리 -->
+    {% for answer in answer_list.items %}
     <a name="answer_{{ answer.id }}"></a>
     <div class="row my-3">
         <div class="col-1">  <!-- 추천영역 -->
@@ -152,7 +153,52 @@
         </div>
         <input type="submit" value="답변등록" class="btn btn-primary">
     </form>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if answer_list.has_prev %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ answer_list.prev_num }}" href="#">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>
+        {% endif %}
+        {% for page_num in answer_list.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != answer_list.page %}
+                <li class="page-item">
+                    <a class="page-link" data-page="{{ page_num }}" href="#">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">{{ page_num }}</a>
+                </li>
+                {% endif %}
+           {% else %}
+                <li class="disabled">
+                    <a class="page-link" href="#">...</a>
+                </li>
+           {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if answer_list.has_next %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ answer_list.next_num }}" href="#">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+    <!-- 페이징처리 끝 -->
 </div>
+<!-- page를 GET 방식으로 요청 -->
+<form id="searchForm" method="get" action="{{ url_for('question.detail', question_id=question.id) }}">
+    <input type="hidden" id="page" name="page" value="{{ page }}">
+</form>
 <!--    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">-->
 <!--    <h1>{{ question.subject }}</h1>-->
 
@@ -192,6 +238,12 @@ $(document).ready(function(){
         if(confirm("정말로 추천하시겠습니까?")) {
             location.href = $(this).data('uri');
         }
+    });
+
+    // class 속성이 page-link인 링크를 누르면 이 링크의 data-page 속성 값을 읽어서 searchForm의 page 필드에 그 값을 설정하여 폼을 요청한다.
+    $(".page-link").on('click', function() {
+        $("#page").val($(this).data("page"));
+        $("#searchForm").submit();
     });
 });
 </script>

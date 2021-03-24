@@ -11,7 +11,7 @@ from pybo.views.auth_views import login_required
 bp = Blueprint('answer', __name__, url_prefix='/answer')
 
 
-# answer 조회
+# answer 생성 함수
 # POST 방식으로 접근
 # login 상태 확인을 위한 decorator 사용
 @bp.route('/create/<int:question_id>', methods=('POST',))
