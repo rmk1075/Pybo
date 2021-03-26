@@ -85,10 +85,8 @@ def detail(question_id):
 
     # answer paging
     page = request.args.get('page', type=int, default=1)
-    answer_list = []
-    if question.answer_set:
-        answer_list = Answer.query.filter(Answer.question_id == question_id).order_by(Answer.create_date.desc())
-        answer_list = answer_list.paginate(page, per_page=5)
+    answer_list = answer_list = Answer.query.filter(Answer.question_id == question_id).order_by(Answer.create_date.desc())
+    answer_list = answer_list.paginate(page, per_page=5)
 
     return render_template('question/question_detail.html', question=question, answer_list=answer_list, form=form)
 
