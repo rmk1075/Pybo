@@ -22,9 +22,10 @@ def _list():
     # GET 방식으로 페이지 값을 가져올때 사용한다.
     # 페이지 값의 type은 int이다.
     # default는 1, 첫번째 페이지이다.
-    # page, kw(keyword) 검색을 위해서 사용
+    # page, kw(keyword), kw_con(keyword condition - all, title, author, contents) 검색을 위해서 사용
     # so는 게시물 정렬에 사용, default는 최신순
     page = request.args.get('page', type=int, default=1)
+    kw_con = request.args.get('kw_con', type=str, default='all')
     kw = request.args.get('kw', type=str, default='')
     so = request.args.get('so', type=str, default='recent')
 
@@ -57,23 +58,42 @@ def _list():
         search = '%%{}%%'.format(kw)
         sub_query = db.session.query(Answer.question_id, Answer.content, User.username) \
             .join(User, Answer.user_id == User.id).subquery()
-        question_list = question_list \
-            .join(User) \
-            .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
-            .filter(Question.subject.ilike(search) |  # 질문제목
-                    Question.content.ilike(search) |  # 질문내용
-                    User.username.ilike(search) |  # 질문작성자
-                    sub_query.c.content.ilike(search) |  # 답변내용
-                    sub_query.c.username.ilike(search)  # 답변작성자
-                    ) \
-            .distinct()
+        if kw_con == 'all':
+            question_list = question_list \
+                .join(User) \
+                .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+                .filter(Question.subject.ilike(search) |  # 질문제목
+                        Question.content.ilike(search) |  # 질문내용
+                        User.username.ilike(search) |  # 질문작성자
+                        sub_query.c.content.ilike(search) |  # 답변내용
+                        sub_query.c.username.ilike(search)  # 답변작성자
+                        ) \
+                .distinct()
+        elif kw_con == 'title':
+            question_list = question_list \
+                .join(User) \
+                .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+                .filter(Question.subject.ilike(search)) \
+                .distinct()
+        elif kw_con == 'author':
+            question_list = question_list \
+                .join(User) \
+                .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+                .filter(User.username.ilike(search)) \
+                .distinct()
+        elif kw_con == 'contents':
+            question_list = question_list \
+                .join(User) \
+                .outerjoin(sub_query, sub_query.c.question_id == Question.id) \
+                .filter(Question.content.ilike(search)) \
+                .distinct()
 
     # paginate 함수로 페이징을 적용한다.
     # 첫번쨰 인자 page는 가져올 페이지의 번호이다,
     # per_page는 페이지마다 보여줄 데이터의 건수이다.
     # 페이징
     question_list = question_list.paginate(page, per_page=10)
-    return render_template('question/question_list.html', question_list=question_list, page=page, kw=kw, so=so)
+    return render_template('question/question_list.html', question_list=question_list, page=page, kw_con=kw_con, kw=kw, so=so)
 
 
 # question detail 조회 함수
