@@ -225,8 +225,8 @@
 <!-- script block -->
 {% block script %}
 <script type='text/javascript'>
-<!--  삭제 클릭시 알림창 출력  -->
 $(document).ready(function(){
+    // 삭제 클릭시 알림창 출력
     $(".delete").on('click', function() {
         if(confirm("정말로 삭제하시겠습니까?")) {
             // data-uri로 입력된 url로 href 설정
@@ -234,6 +234,7 @@ $(document).ready(function(){
         }
     });
 
+    // 추천 버튼 클릭시 출력
     $(".recommend").on('click', function() {
         if(confirm("정말로 추천하시겠습니까?")) {
             location.href = $(this).data('uri');
