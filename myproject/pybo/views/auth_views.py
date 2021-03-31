@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
 from pybo import db
-from pybo.forms import UserCreateForm, UserLoginForm, FindPasswordForm
+from pybo.forms import UserCreateForm, UserLoginForm, ChangePasswordForm
 from pybo.models import User
 
 # auth blueprint 객체 생성
@@ -87,10 +87,10 @@ def login_required(view):
 
 
 # 사용자 비밀번호 변경 함수
-@bp.route('/find_password/', methods=('GET', 'POST'))
+@bp.route('/change_password/', methods=('GET', 'POST'))
 @login_required
-def find_password():
-    form = FindPasswordForm()
+def change_password():
+    form = ChangePasswordForm()
     if request.method == 'POST' and form.validate_on_submit():
         if g.user.username != form.username.data:
             error = '사용자 이름이 잘못되었습니다.'
@@ -101,4 +101,4 @@ def find_password():
             form.populate_obj(user)
             db.session.commit()
             return redirect(url_for('main.index'))
-    return render_template('auth/find_password.html', form=form)
+    return render_template('auth/change_password.html', form=form)
