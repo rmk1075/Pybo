@@ -43,3 +43,9 @@ class UserLoginForm(FlaskForm):
 # 댓글 form
 class CommentForm(FlaskForm):
     content = TextAreaField('내용', validators=[DataRequired()])
+
+
+# 비밀번호 변경 form
+class FindPasswordForm(FlaskForm):
+    username = StringField('사용자이름', validators=[DataRequired(), Length(min=3, max=25)])
+    password = PasswordField('비밀번호', validators=[DataRequired()])
