@@ -8,7 +8,7 @@ from .auth_views import login_required
 from .. import db
 
 from pybo.forms import QuestionForm, AnswerForm
-from pybo.models import Question, Answer, User, question_voter
+from pybo.models import Question, Answer, User, question_voter, answer_voter, Comment
 
 # 블루프린트 객체 이름 question으로 생성
 # url_prefix를 '/question'으로 설정
@@ -105,10 +105,26 @@ def detail(question_id):
 
     # answer paging
     page = request.args.get('page', type=int, default=1)
-    answer_list = answer_list = Answer.query.filter(Answer.question_id == question_id).order_by(Answer.create_date.desc())
-    answer_list = answer_list.paginate(page, per_page=5)
+    so = request.args.get('so', type=str, default='recent')
+    if so == 'recommend':
+        sub_query = db.session.query(answer_voter.c.answer_id, func.count('*').label('answer_voter')) \
+            .group_by(answer_voter.c.answer_id).subquery()
 
-    return render_template('question/question_detail.html', question=question, answer_list=answer_list, form=form)
+        answer_list = Answer.query \
+            .outerjoin(sub_query, Answer.id == sub_query.c.answer_id) \
+            .order_by(sub_query.c.answer_voter.desc(), Answer.create_date.desc())
+    elif so == 'popular':
+        sub_query = db.session.query(Comment.answer_id, func.count('*').label('num_comment')) \
+            .group_by(Comment.answer_id).subquery()
+
+        answer_list = Answer.query \
+            .outerjoin(sub_query, Answer.id == sub_query.c.answer_id) \
+            .order_by(sub_query.c.answer_answer.desc(), Answer.create_date.desc())
+    else:
+        answer_list = Answer.query.filter(Answer.question_id == question_id).order_by(Answer.create_date.desc())
+
+    answer_list = answer_list.paginate(page, per_page=5)
+    return render_template('question/question_detail.html', question=question, answer_list=answer_list, form=form, so=so)
 
 
 # Quesiont 등록 함수
